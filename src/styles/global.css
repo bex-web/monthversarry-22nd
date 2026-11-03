@@ -1,0 +1,999 @@
+/**
+ * global.css
+ *
+ * Screen styles for the Monthversarrie experience. Structure:
+ *   1. base / immersive viewport
+ *   2. shared: dolly transition, textures, hold targets
+ *   3. splash           4. floating scene     5. slideshow
+ *   6. letter paper     7. flowers            8. reduced motion
+ *
+ * Design notes (decisions & reasons):
+ *   Whitespace is the main structural voice; the only accent is clay
+ *   terracotta used on hairlines, caret, and the active dot. The recurring
+ *   motif is botanical line sprigs + a paper "print" frame, tying floating
+ *   cards to the letter stationery. Motion is soft and physically plausible;
+ *   gradients are kept to near-invisible depth washes, never color effects.
+ */
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  /* fixed + overflow hidden kills iOS rubber-banding behind the experience */
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg-stage);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  -webkit-tap-highlight-color: transparent;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  height: 100vh;
+  height: 100dvh;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+/* ---------------------------------------------------------------- 1. stage */
+
+.stage {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-stage);
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding:
+    calc(var(--safe-t) + 22px)
+    calc(var(--safe-r) + 22px)
+    calc(var(--safe-b) + 18px)
+    calc(var(--safe-l) + 22px);
+}
+
+/* Dolly transition: outgoing scene recedes (scale + blur), a deep-forest
+   veil covers, incoming scene settles from the same scale-down. The veil
+   keeps mid-transition frames from flashing harshly. */
+
+.stage-content {
+  position: absolute;
+  inset: 0;
+}
+
+.stage.is-covering .stage-content {
+  transform: scale(1.06);
+  filter: blur(7px);
+  opacity: 0.42;
+  transition:
+    transform var(--dur-cover) var(--ease-calm),
+    filter var(--dur-cover) var(--ease-calm),
+    opacity var(--dur-cover) var(--ease-calm);
+}
+
+.stage.is-revealing .stage-content {
+  animation: dolly-reveal var(--dur-reveal) var(--ease-calm) both;
+}
+
+@keyframes dolly-reveal {
+  from {
+    transform: scale(1.07);
+    filter: blur(9px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+.dolly-veil {
+  position: absolute;
+  inset: -2%;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(120% 90% at 50% 42%,
+      rgba(83, 94, 55, 0.5) 0%,
+      rgba(57, 68, 32, 0.88) 62%,
+      rgba(47, 53, 28, 0.98) 88%);
+  transition: opacity 440ms var(--ease-calm);
+}
+
+.stage.is-covering .dolly-veil {
+  opacity: 1;
+  transition-duration: 340ms;
+}
+
+.stage.is-revealing .dolly-veil {
+  opacity: 1;
+  transition: none;
+}
+
+/* ---------------------------------------------------------------- 2. shared */
+
+/* Faint paper grain. Applied on top of flat colors only (splash, letter
+   paper); it exists so the warm flats feel like real material. */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='140'%20height='140'%3E%3Cfilter%20id='n'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.9'%20numOctaves='2'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='saturate'%20values='0'/%3E%3C/filter%3E%3Crect%20width='140'%20height='140'%20filter='url(%23n)'%20opacity='0.34'/%3E%3C/svg%3E");
+  background-size: 140px 140px;
+  mix-blend-mode: multiply;
+  opacity: 0.055;
+}
+
+.vignette::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 clamp(60px, 18vw, 130px) rgba(57, 68, 32, 0.14);
+}
+
+/* Hold targets: shared pointer hygiene so touch Holds work everywhere */
+.hold-target {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  border: 0;
+  background: transparent;
+  text-align: inherit;
+}
+
+.hold-target:focus-visible {
+  outline: 2px solid var(--clay-400);
+  outline-offset: 5px;
+  border-radius: 10px;
+}
+
+/* Hold feedback: a hairline that fills left to right while holding */
+.hold-progress {
+  position: absolute;
+  height: 2px;
+  border-radius: 2px;
+  background-color: rgba(161, 155, 132, 0.35);
+  opacity: 0;
+  transition: opacity 180ms ease;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.hold-target.is-holding .hold-progress,
+.paper-hold.is-holding .hold-progress {
+  opacity: 1;
+}
+
+.hold-progress > i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+  padding: 0;
+}
+
+/* Appearance fallback for a photo/video slot: honest earthen block */
+.media-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px;
+  box-sizing: border-box;
+  background:
+    linear-gradient(150deg, var(--photo-fallback-a) 0%, var(--photo-fallback-b) 100%);
+  color: var(--clay-600);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* ---------------------------------------------------------------- 3. splash */
+
+.splash-scene {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: clamp(26px, 6.4vh, 52px);
+}
+
+.splash-sprig {
+  width: clamp(28px, 9vw, 44px);
+  color: var(--olive-400);
+  transform-origin: 50% 8%;
+  animation: sway 9s var(--ease-calm) infinite alternate;
+  opacity: 0.9;
+}
+
+.splash-corner {
+  position: absolute;
+  bottom: calc(var(--safe-b) + 10px);
+  right: calc(var(--safe-r) + 12px);
+  width: clamp(52px, 15vw, 84px);
+  color: var(--moss-300);
+  opacity: 0.3;
+  transform: rotate(8deg);
+  pointer-events: none;
+}
+
+.splash-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2.3rem, 11.2vw, 4.5rem);
+  line-height: 1.05;
+  letter-spacing: 0.005em;
+  color: var(--ink);
+}
+
+.splash-title .l2 {
+  display: block;
+  font-style: italic;
+  font-weight: 600;
+  color: var(--clay-600);
+}
+
+.splash-title .l3 {
+  display: block;
+  color: var(--forest-600);
+}
+
+/* Quietly dated: the day, letterspaced like a keepsake caption. */
+.splash-date {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: clamp(0.8rem, 3.4vw, 1rem);
+  letter-spacing: 0.18em;
+  color: var(--ink-muted);
+}
+
+/* Quiet invitation: small italic label over a wide, thumb-high tap zone.
+   The underline is the single hairline accent of the screen. */
+.splash-cta {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 22px clamp(34px, 14vw, 78px) 26px;
+  cursor: pointer;
+  background: none;
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+  letter-spacing: 0.055em;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.splash-cta:focus-visible {
+  outline: 2px solid var(--clay-400);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+.splash-cta > span {
+  animation: breathe 5.4s ease-in-out infinite;
+}
+
+.splash-cta::after {
+  content: "";
+  width: 58px;
+  height: 1px;
+  background: var(--clay-500);
+  opacity: 0.65;
+  transform-origin: 50% 50%;
+  animation: line-sway 5.4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.62; }
+  50% { opacity: 1; }
+}
+
+@keyframes line-sway {
+  0%, 100% { transform: scaleX(1); }
+  50% { transform: scaleX(1.45); }
+}
+
+@keyframes sway {
+  from { transform: rotate(-2.6deg); }
+  to { transform: rotate(2.6deg); }
+}
+
+/* ------------------------------------------------------------ 4. floating */
+
+.floating-scene {
+  padding: 0;
+  background:
+    radial-gradient(135% 110% at 50% 18%,
+      #f7f1e6 0%,
+      #efe7d6 58%,
+      #e7ddc6 100%);
+}
+
+.float-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.float-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  touch-action: none;
+  will-change: transform;
+  cursor: grab;
+}
+
+.float-card.is-dragging {
+  z-index: 40;
+  cursor: grabbing;
+}
+
+.float-card-inner {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 5px 5px 15px;
+  background: var(--bg-paper);
+  border: 1px solid rgba(255, 253, 247, 0.85);
+  border-radius: 14px;
+  box-shadow:
+    0 12px 26px rgba(57, 68, 32, 0.16),
+    0 2px 5px rgba(57, 68, 32, 0.1);
+  overflow: hidden;
+}
+
+.float-card img,
+.float-card .media-fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+}
+
+.float-card img {
+  opacity: 0;
+  transition: opacity 620ms ease;
+}
+
+.float-card img.is-loaded {
+  opacity: 1;
+}
+
+.float-card .media-fallback {
+  font-size: 0.78rem;
+}
+
+/* Center hold: a soft paper wash with a rounded rectangular border in the
+   font color, enclosing the token and its hold hint together. Subtle shadow
+   gives it a lifted paper feel. */
+.floating-center {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(86vw, 330px);
+  padding: clamp(16px, 5vw, 24px) clamp(14px, 4.5vw, 22px) clamp(18px, 5.5vw, 26px);
+  background: radial-gradient(120% 130% at 50% 40%,
+    rgba(245, 240, 231, 0.94) 0%,
+    rgba(245, 240, 231, 0.66) 62%,
+    rgba(245, 240, 231, 0) 100%);
+  border: 1.5px solid var(--forest-600);
+  border-radius: 24px;
+  box-shadow:
+    0 12px 26px rgba(57, 68, 32, 0.16),
+    0 2px 5px rgba(57, 68, 32, 0.1);
+  z-index: 30;
+}
+
+.floating-center-hold {
+  display: block;
+  position: relative;
+  width: 100%;
+  padding: 0 clamp(8px, 2.6vw, 12px) clamp(12px, 4vw, 16px);
+  cursor: pointer;
+}
+
+/* Normal font (not hollow) for the center token and hint. */
+.floating-token {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.75rem, 8vw, 2.5rem);
+  line-height: 1.12;
+  color: var(--forest-600);
+}
+
+.floating-hint {
+  margin: clamp(6px, 2vw, 10px) 0 0;
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  pointer-events: none;
+}
+
+.floating-center-hold .hold-progress {
+  left: 20%;
+  right: 20%;
+  bottom: 6px;
+}
+
+/* ------------------------------------------------------------ 5. slideshow */
+
+.slideshow {
+  position: absolute;
+  inset: 0;
+  background: var(--forest-600);
+  padding: 0;
+}
+
+.slides {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  /* Delegates vertical gestures to the deck: without it mobile browsers
+     treat the swipe as page scroll and pointercancel the finger before
+     pointerup, so slide 1 never advanced. */
+  touch-action: none;
+}
+
+.slides.enter-first {
+  animation: deck-reveal var(--dur-slide) var(--ease-calm) both;
+}
+
+@keyframes deck-reveal {
+  from {
+    transform: scale(1.035);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  transform: translateY(100%);
+  opacity: 0;
+  transition:
+    transform var(--dur-slide) var(--ease-calm),
+    opacity var(--dur-slide) var(--ease-calm),
+    visibility 0s linear var(--dur-slide);
+}
+
+.slide.is-above {
+  transform: translateY(-97%);
+  opacity: 0;
+}
+
+.slide.is-below {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+.slide.is-active {
+  visibility: visible;
+  transform: translateY(0);
+  opacity: 1;
+  transition:
+    transform var(--dur-slide) var(--ease-calm),
+    opacity var(--dur-slide) var(--ease-calm),
+    visibility 0s;
+}
+
+/* Live drag: finger-driven offset on the whole deck, transitions off while
+   the pointer owns the movement */
+.slides.is-dragging .slide {
+  transition: none;
+}
+
+.slides.is-dragging .slide.is-active {
+  transform: translateY(calc(var(--drag, 0px) * 0.24));
+}
+
+.slides.is-dragging .slide.is-below {
+  transform: translateY(calc(100% + var(--drag, 0px) * 0.12));
+}
+
+.slides.is-dragging .slide.is-above {
+  transform: translateY(calc(-97% + var(--drag, 0px) * 0.12));
+}
+
+.slide-media-static,
+.slide-media-static img,
+.slide-media-static video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: var(--forest-600);
+}
+
+.slide-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.slide-scrim.lower-third {
+  background: linear-gradient(to top,
+    rgba(var(--scrim-base), 0.5) 0%,
+    rgba(var(--scrim-base), 0.16) 32%,
+    rgba(var(--scrim-base), 0) 55%);
+}
+
+.slide-scrim.center {
+  background: radial-gradient(70% 44% at 50% 50%,
+    rgba(var(--scrim-base), 0.34) 0%,
+    rgba(var(--scrim-base), 0.12) 64%,
+    rgba(var(--scrim-base), 0) 100%);
+}
+
+.slide-text {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  margin: 0;
+  color: #fffcf3;
+  font-family: var(--font-display);
+  text-shadow: 0 1px 24px rgba(var(--scrim-base), 0.4);
+  pointer-events: none;
+}
+
+.slide-text.lower-third {
+  bottom: 21%;
+  text-align: center;
+  font-size: clamp(1.65rem, 7vw, 2.35rem);
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.slide.is-active .slide-text.lower-third {
+  animation: text-rise 560ms var(--ease-calm) 150ms both;
+}
+
+.slide-text.center {
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: center;
+  font-style: italic;
+  font-size: clamp(1.3rem, 5.6vw, 1.85rem);
+}
+
+@keyframes text-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-hold {
+  position: absolute;
+  left: 50%;
+  bottom: 17%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.slide-hold .hold-progress {
+  left: 12%;
+  right: 12%;
+  bottom: -8px;
+}
+
+.slide-hold-label {
+  display: block;
+  min-width: 40vw;
+  padding: 20px 30px 22px;
+  border-radius: 16px;
+  background: rgba(var(--scrim-base), 0.32);
+  border: 1px solid rgba(255, 252, 243, 0.28);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  color: #fffcf3;
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 4.6vw, 1.4rem);
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+/* Vertical progress dots, right edge center */
+.slide-dots {
+  position: absolute;
+  right: calc(var(--safe-r) + 9px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.slide-dots i {
+  width: 5px;
+  height: 5px;
+  padding: 0;
+  border-radius: 3px;
+  background: rgba(255, 252, 243, 0.55);
+  box-shadow: 0 0 4px rgba(var(--scrim-base), 0.5);
+  transition: height 300ms var(--ease-calm), background 300ms ease;
+}
+
+.slide-dots i.is-on {
+  height: 20px;
+  background: var(--clay-100);
+}
+
+.swipe-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--safe-b) + 22px);
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: rgba(255, 252, 243, 0.72);
+  z-index: 20;
+  pointer-events: none;
+  animation: breathe 4.6s ease-in-out infinite;
+}
+
+.video-retry {
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  transform: translateX(-50%);
+  z-index: 12;
+  padding: 11px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 252, 243, 0.32);
+  background: rgba(var(--scrim-base), 0.38);
+  color: #fffcf3;
+  font-size: 0.86rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.video-retry:focus-visible {
+  outline: 2px solid var(--clay-100);
+  outline-offset: 3px;
+}
+
+/* ---------------------------------------------------------------- 6. letter */
+
+.letter-scene {
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+}
+
+.paper-hold {
+  position: relative;
+  z-index: 10;
+  /* pan-y lets the letter text scroll internally, while a stationary press
+     (no movement) still completes the hold */
+  touch-action: pan-y;
+  cursor: pointer;
+  width: min(88vw, 420px);
+}
+
+.paper {
+  position: relative;
+  min-height: min(64vh, 560px);
+  max-height: min(74vh, 680px);
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #fffefa 0%, var(--bg-paper) 68%);
+  border-radius: 5px;
+  transform: rotate(-0.6deg);
+  box-shadow:
+    0 26px 48px rgba(41, 39, 31, 0.13),
+    0 7px 16px rgba(41, 39, 31, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* paper grain + soft warm edge */
+.paper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 5px;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='140'%20height='140'%3E%3Cfilter%20id='n'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.9'%20numOctaves='2'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='saturate'%20values='0'/%3E%3C/filter%3E%3Crect%20width='140'%20height='140'%20filter='url(%23n)'%20opacity='0.3'/%3E%3C/svg%3E");
+  background-size: 140px 140px;
+  mix-blend-mode: multiply;
+  opacity: 0.05;
+  z-index: 3;
+}
+
+.paper,
+.paper-hold.is-holding .paper {
+  transition: box-shadow 260ms ease;
+}
+
+.paper-hold.is-holding .paper {
+  box-shadow:
+    0 20px 38px rgba(41, 39, 31, 0.11),
+    0 5px 12px rgba(41, 39, 31, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Faint tan ruling under the handwriting */
+.paper-rules {
+  position: absolute;
+  left: 26px;
+  right: 14px;
+  top: 92px;
+  bottom: 16px;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(to bottom,
+    transparent 0,
+    transparent calc(var(--rule-gap) - 1px),
+    rgba(216, 209, 195, 0.85) calc(var(--rule-gap) - 1px),
+    rgba(216, 209, 195, 0.85) var(--rule-gap));
+  z-index: 1;
+  --rule-gap: clamp(2.2rem, 8vw, 2.55rem);
+}
+
+/* whisper "fold" near the top like old stationery */
+.paper-fold {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 86px;
+  height: 1px;
+  background: rgba(216, 209, 195, 0.5);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.paper-content {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  padding: clamp(28px, 9vw, 46px) clamp(20px, 6vw, 30px) 26px;
+  flex: 1;
+  max-height: min(74vh, 680px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+  --rule-gap: clamp(2.2rem, 8vw, 2.55rem);
+}
+
+.paper-text {
+  margin: 0;
+  font-family: var(--font-hand);
+  font-weight: 500;
+  font-size: clamp(1.42rem, 5.5vw, 1.68rem);
+  line-height: var(--rule-gap);
+  letter-spacing: 0.012em;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  word-break: normal;
+  min-height: calc(var(--rule-gap) * 3);
+}
+
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.02em;
+  margin-left: 2px;
+  vertical-align: -0.16em;
+  background: var(--clay-500);
+  animation: caret-blink 0.92s steps(1) infinite;
+}
+
+@keyframes caret-blink {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: 0; }
+}
+
+.letter-return-hint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+  z-index: 40;
+  pointer-events: none;
+}
+
+/* ============================================================ 7. flowers */
+
+/* Two depth layers: sprigs behind the paper move less than the front
+   cluster, giving a light parallax that responds to the finger instead of
+   drifting on its own. Pointer region = lower half of the letter scene. */
+.flowers-back,
+.flowers-front {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.flowers-back {
+  height: 42%;
+  z-index: 5;
+}
+
+.flowers-front {
+  height: 38%;
+  z-index: 30;
+}
+
+.flower {
+  position: absolute;
+  bottom: -2%;
+  transform: rotate(var(--fr, 0deg)) translate(var(--fx, 0px), 0);
+  transform-origin: 50% 100%;
+  will-change: transform;
+}
+
+.flower img {
+  width: 100%;
+  display: block;
+}
+
+.flower.back {
+  opacity: 0.9;
+  filter: saturate(0.8) brightness(0.97);
+}
+
+.flower.back-left {
+  left: -7%;
+  width: 36%;
+}
+
+.flower.back-right {
+  right: -8%;
+  width: 30%;
+}
+
+.flower.front-between {
+  left: 50%;
+  margin-left: -14%;
+  width: 28%;
+  bottom: -4%;
+}
+
+.flower.front-left {
+  left: 2%;
+  width: 24%;
+  z-index: 45;
+}
+
+.flower.front-right {
+  right: 3%;
+  width: 28%;
+  z-index: 45;
+}
+
+/* ====================================================== 8. reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-sprig,
+  .splash-cta > span,
+  .splash-cta::after,
+  .swipe-hint {
+    animation: none;
+  }
+
+  .stage.is-covering .stage-content {
+    transform: none;
+    filter: none;
+    opacity: 0.15;
+  }
+
+  .stage.is-revealing .stage-content {
+    animation: fade-reveal 280ms ease both;
+  }
+
+  .dolly-veil {
+    transition-duration: 240ms;
+  }
+
+  .slide {
+    transition-duration: 220ms;
+  }
+
+  .slides.enter-first {
+    animation: none;
+  }
+
+  .slide.is-active .slide-text.lower-third {
+    animation: fade-reveal 240ms ease both;
+  }
+}
+
+@keyframes fade-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Small landscape phones: keep screens composed, let height rule */
+@media (orientation: landscape) and (max-height: 480px) {
+  .splash-title {
+    font-size: clamp(1.7rem, 6vw, 2.6rem);
+  }
+
+  .floating-token {
+    font-size: clamp(1.4rem, 5vw, 2rem);
+  }
+
+  .floating-center {
+    top: 52%;
+  }
+
+  .slide-hold {
+    bottom: 14%;
+  }
+
+  .paper-hold {
+    width: min(64vh, 420px);
+  }
+
+  .paper,
+  .paper-content {
+    max-height: 86vh;
+  }
+}

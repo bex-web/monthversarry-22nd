@@ -1,0 +1,55 @@
+/**
+ * Design tokens. Every color, font, and motion value lives here; component
+ * styles reference the variables below and never raw hex values.
+ */
+
+:root {
+  /* Boho Earthy Tones palette (sampled reference, see PROMPT.md) */
+  --clay-100: #f4c8a0;
+  --clay-200: #e8a97c;
+  --clay-300: #d5875f;
+  --clay-400: #bd7142;
+  --clay-500: #a45b32;
+  --clay-600: #8d4824;
+
+  --sage-100: #c3bfa0;
+  --olive-200: #a8a07c;
+  --moss-300: #8d8b61;
+  --olive-400: #6f754c;
+
+  --forest-500: #515c32;
+  --forest-600: #394420;
+
+  /* Supporting neutrals */
+  --bg-page: #f5f0e7;
+  --bg-paper: #fffdf7;
+  --ink: #29271f;
+  --ink-muted: #716d5d;
+  --line: #d8d1c3;
+
+  /* Semantic aliases (keep component rules on these, not on the palette) */
+  --bg-stage: var(--bg-page);         /* warm page background */
+  --bg-veil: #2f351c;                 /* deep forest veil between screens */
+  --scrim-base: 41, 39, 31;           /* ink rgb for translucent scrims */
+  --accent: var(--clay-500);          /* single warm accent */
+  --photo-fallback-a: var(--sage-100);
+  --photo-fallback-b: var(--clay-100);
+
+  /* Type */
+  --font-display: "Cormorant Garamond", "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-ui: "DM Sans", "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-hand: "Caveat", "Patrick Hand", "Bradley Hand", "Segoe Script", cursive;
+
+  /* Motion */
+  --ease-calm: cubic-bezier(0.32, 0.72, 0.25, 1);
+  --dur-cover: 420ms;   /* dolly: current scene recedes */
+  --dur-reveal: 620ms;  /* dolly: next scene settles in */
+  --dur-slide: 640ms;   /* slideshow step */
+  --hold-ms: 800;       /* hold threshold in ms; read by useHold via CSS var */
+
+  /* Safe areas (env() with 0 fallback for desktop) */
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+}
