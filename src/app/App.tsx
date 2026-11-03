@@ -23,6 +23,11 @@ function shouldStartAt(): ScreenId | undefined {
  *
  * Pure screen composition. Everything about navigation lives in
  * useStoryMachine; every piece of copy and media lives in storyContent.
+ *
+ * Background music starts as soon as the page is rendered: it begins
+ * muted to satisfy the browsers' autoplay policy, and unmutes/promotes
+ * playback on the first gesture; retries on later gestures in case the
+ * first attempt was blocked.
  */
 export function App() {
   const { screen, dolly, goTo } = useStoryMachine(shouldStartAt() ?? "splash");
@@ -33,18 +38,45 @@ export function App() {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const start = () => {
-      if (startedRef.current) return;
-      startedRef.current = true;
+    audio.loop = true;
+    audio.volume = storyContent.soundtrack.volume;
+    audio.muted = true;
+    audio.preload = "auto";
+
+    const unmuteAndPlay = () => {
+      if (!startedRef.current) startedRef.current = true;
+      audio.muted = false;
       audio.volume = storyContent.soundtrack.volume;
-      audio.loop = true;
-      void audio.play().catch(() => { startedRef.current = false; });
+      void audio.play().catch(() => {
+        startedRef.current = false;
+      });
     };
-    window.addEventListener("pointerdown", start, { once: true });
-    window.addEventListener("keydown", start, { once: true });
+    const retryPlay = () => {
+      if (startedRef.current || !audio.paused) return;
+      startedRef.current = true;
+      void audio.play()
+        .then(() => {
+          audio.muted = false;
+          audio.volume = storyContent.soundtrack.volume;
+        })
+        .catch(() => { startedRef.current = false; });
+    };
+
+    const timer = window.setTimeout(() => {
+      void audio.play().catch(() => {
+        // blocked until a gesture; retry later
+      });
+    }, 0);
+    window.addEventListener("pointerdown", unmuteAndPlay, { once: true });
+    window.addEventListener("keydown", unmuteAndPlay, { once: true });
+    window.addEventListener("pointerdown", retryPlay);
+    window.addEventListener("keydown", retryPlay);
     return () => {
-      window.removeEventListener("pointerdown", start);
-      window.removeEventListener("keydown", start);
+      window.clearTimeout(timer);
+      window.removeEventListener("pointerdown", unmuteAndPlay);
+      window.removeEventListener("keydown", unmuteAndPlay);
+      window.removeEventListener("pointerdown", retryPlay);
+      window.removeEventListener("keydown", retryPlay);
     };
   }, []);
 
@@ -54,6 +86,8 @@ export function App() {
         ref={audioRef}
         src={storyContent.soundtrack.src}
         preload="auto"
+        autoPlay
+        muted
         aria-hidden="true"
       />
       <div className="stage-content" key={screen}>

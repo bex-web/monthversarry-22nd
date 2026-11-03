@@ -23,16 +23,16 @@ const OUT_DIR = "public/assets";
 /** Which originals become which placeholder slots. Add / rename entries freely. */
 const SELECTION = {
   floating: [
-    "photo_2026-10-25_21-34-26.jpg",
-    "photo_2026-10-25_21-34-47.jpg",
-    "photo_2026-10-25_21-34-28.jpg",
-    "photo_2026-10-25_21-34-54.jpg",
-    "photo_2026-10-25_21-34-33.jpg",
-    "photo_2026-10-25_21-34-55.jpg",
-    "photo_2026-10-25_21-34-18.jpg",
-    "photo_2026-10-25_21-34-20.jpg",
-    "photo_2026-10-25_21-34-36.jpg",
-    "photo_2026-10-25_21-34-44.jpg",
+    "floating/floating-01.jpg",
+    "floating/floating-02.jpg",
+    "floating/floating-03.jpg",
+    "floating/floating-04.jpg",
+    "floating/floating-05.jpg",
+    "floating/floating-06.jpg",
+    "floating/floating-07.jpg",
+    "floating/floating-08.jpg",
+    "floating/floating-09.jpg",
+    "floating/floating-10.jpg",
   ],
   slideshow: [
     "slideshow/image-1.png",
@@ -171,7 +171,7 @@ async function main() {
   const musicSrc = `${OUT_DIR}/music1.mp3`;
   if (fs.existsSync(musicSrc)) {
     await ffmpeg(
-      ["-i", musicSrc, "-c:a", "libmp3lame", "-b:a", "96k", "-ac", "2", "-ar", "44100",
+      ["-i", musicSrc, "-c:a", "libmp3lame", "-b:a", "64k", "-ac", "1", "-ar", "44100",
         `${OUT_DIR}/music1-opt.mp3`],
       "music transcode",
     );
