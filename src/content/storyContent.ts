@@ -90,7 +90,7 @@ export const storyContent = {
   slideshow: [
     {
       type: "image",
-      src: assetPath("slideshow/image-1.png"),
+      src: assetPath("slideshow/image-1.jpg"),
       alt: "Placeholder memory, replace with a photo of you two",
       text: "There are lots of snap and affection that transcends",
       textPosition: "lower-third",
@@ -99,7 +99,7 @@ export const storyContent = {
     {
       type: "video",
       src: assetPath("slideshow/video-1.mp4"),
-      poster: assetPath("slideshow/video-1-poster.png"),
+      poster: assetPath("slideshow/video-1-poster.jpg"),
       alt: "Placeholder memory clip, replace with your video",
       text: "through the steps and confession.",
       textPosition: "center",
@@ -107,19 +107,19 @@ export const storyContent = {
     },
     {
       type: "image",
-      src: assetPath("slideshow/image-2.png"),
+      src: assetPath("slideshow/image-2.jpg"),
       alt: "Placeholder memory, replace with a photo of you two",
       focal: { x: "50%", y: "40%" },
     },
     {
       type: "image",
-      src: assetPath("slideshow/image-3.png"),
+      src: assetPath("slideshow/image-3.jpg"),
       alt: "Placeholder memory, replace with a photo of you two",
       focal: { x: "50%", y: "40%" },
     },
     {
       type: "image",
-      src: assetPath("slideshow/image-4.png"),
+      src: assetPath("slideshow/image-4.jpg"),
       alt: "Placeholder memory, replace with a photo of you two",
       hold: { holdLabel: "Hold to continue" },
       focal: { x: "50%", y: "40%" },

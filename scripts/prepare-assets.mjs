@@ -44,8 +44,8 @@ const SELECTION = {
 };
 
 const FLOATING_LONG_EDGE = 1000; // floating cards render small (<= ~45vw)
-const SLIDESHOW_LONG_EDGE = 2000; // slideshow fills the screen
-const JPEG = { quality: 80, mozjpeg: true, progressive: true };
+const SLIDESHOW_LONG_EDGE = 1600; // slideshow fills the screen
+const JPEG = { quality: 75, mozjpeg: true, progressive: true };
 
 async function listMedia(dir) {
   const files = await fs.promises.readdir(dir);
@@ -165,7 +165,23 @@ async function main() {
   }
   report.push({ out: `${OUT_DIR}/slideshow/video-1.mp4`, kb: kb(`${OUT_DIR}/slideshow/video-1.mp4`) });
   report.push({ out: `${OUT_DIR}/slideshow/video-1-poster.jpg`, kb: kb(`${OUT_DIR}/slideshow/video-1-poster.jpg`) });
+
+  /* Transcode the background music down so it buffers quickly and starts
+     without streaming delay on mobile networks. */
+  const musicSrc = `${OUT_DIR}/music1.mp3`;
+  if (fs.existsSync(musicSrc)) {
+    await ffmpeg(
+      ["-i", musicSrc, "-c:a", "libmp3lame", "-b:a", "96k", "-ac", "2", "-ar", "44100",
+        `${OUT_DIR}/music1-opt.mp3`],
+      "music transcode",
+    );
+    if (fs.existsSync(`${OUT_DIR}/music1-opt.mp3`)) {
+      fs.renameSync(`${OUT_DIR}/music1-opt.mp3`, musicSrc);
+    }
+  }
+
   console.log(`source video: ${meta.codec} ${meta.width}x${meta.height}, ${meta.duration.toFixed(1)}s`);
+  console.log(`music: ${kb(musicSrc).toFixed(0)} KB (96k)`);
   for (const r of report) console.log(`${r.out.padEnd(48)} ${String(Math.round(r.kb)).padStart(5)} KB`);
 }
 
